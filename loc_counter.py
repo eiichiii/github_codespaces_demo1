@@ -42,11 +42,26 @@ def scan_folder(folder):
                 results.append((path, loc, eloc))
     return results
 
+def scan_files(files):
+    results = []
+    for file in files:
+        if is_code_file(file) and os.path.isfile(file):
+            loc, eloc = count_loc_eloc(file)
+            results.append((file, loc, eloc))
+    return results
+
 def main():
     parser = argparse.ArgumentParser(description='ソースコードのLOCとeLOCを計測するツール')
-    parser.add_argument('folder', help='計測対象のフォルダ')
+    parser.add_argument('targets', nargs='+', help='計測対象のフォルダまたはファイル（複数指定可）')
     args = parser.parse_args()
-    results = scan_folder(args.folder)
+    results = []
+    for target in args.targets:
+        if os.path.isdir(target):
+            results.extend(scan_folder(target))
+        elif os.path.isfile(target):
+            results.extend(scan_files([target]))
+        else:
+            print(f"警告: {target} は存在しません。", file=sys.stderr)
     total_loc = 0
     total_eloc = 0
     for path, loc, eloc in results:
